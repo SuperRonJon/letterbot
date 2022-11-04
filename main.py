@@ -1,21 +1,25 @@
-import feedparser
+import asyncio
 import discord
+import feedparser
 import re
+import threading
+from discord.ext import tasks
 from secret import token
 from user import User
 
 feed_url = 'https://letterboxd.com/superronjon/rss/'
-intents = discord.Intents.default()
-intents.message_content = True
 
 followed_users = []
 
+intents = discord.Intents.default()
+intents.message_content = True
 client = discord.Client(intents=intents)
 
 
 @client.event
 async def on_ready():
     print('Logged in as {}'.format(client.user))
+    client.loop.create_task(update_check_periodically())
 
 
 @client.event
@@ -30,8 +34,11 @@ async def on_message(message):
     if message.content.startswith('$follow'):
         args = message.content.split(' ')
         if len(args) == 3 and len(message.mentions) == 1:
-            follow_user(message.mentions[0], args[2], message.channel)
-            print("Followed {} with letterboxd username {}".format(message.mentions[0].name, args[2]))
+            if follow_user(message.mentions[0], args[2], message.channel):
+                print("Followed {} with letterboxd username {}".format(message.mentions[0].name, args[2]))
+                await message.channel.send("Followed {} with letterboxd username {}".format(message.mentions[0].name, args[2]))
+            else:
+                await message.channel.send("Already following user {}".format(message.mentions[0].name))
         else:
             await message.channel.send("Inavlid command")
     
@@ -40,6 +47,8 @@ async def on_message(message):
 
 
 def follow_user(user, letterboxd_username, disc_channel):
+    if already_following_user(user):
+        return False
     url = "https://letterboxd.com/{}/rss/".format(letterboxd_username)
     latest_id = 0
     try:
@@ -49,6 +58,7 @@ def follow_user(user, letterboxd_username, disc_channel):
 
     new_user = User(user, url, latest_id, disc_channel)
     followed_users.append(new_user)
+    return True
 
 def get_latest_entry(url):
     feed = feedparser.parse(url)
@@ -65,9 +75,9 @@ def build_embed(entry, username):
     embeded.set_thumbnail(url=thumbnail.group(1))
     return embeded
 
-def already_following_user(user):
+def already_following_user(new_user):
     for user in followed_users:
-        if user.discord == user:
+        if user.discord.id == new_user.id:
             return True
     return False
 
@@ -83,8 +93,11 @@ async def run_update_check():
             latest = get_latest_entry(user.rss_url)
             user.latest_id = latest.id
             await user.channel.send(embed=build_embed(latest, user.discord.name))
-        else:
-            print("No update")
+    
+async def update_check_periodically():
+    while True:
+        await run_update_check()
+        await asyncio.sleep(5)
 
 
 client.run(token)
