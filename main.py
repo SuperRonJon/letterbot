@@ -1,6 +1,8 @@
 import asyncio
 import discord
 import feedparser
+import os
+import pickle
 import re
 import threading
 from discord.ext import tasks
@@ -18,7 +20,16 @@ client = discord.Client(intents=intents)
 
 @client.event
 async def on_ready():
+    global followed_users
     print('Logged in as {}'.format(client.user))
+    if os.path.exists('./followed.pkl'):
+        with open('followed.pkl', 'rb') as f:
+            followed_users = pickle.load(f)
+        print('Found saved followed users: ')
+        for user in followed_users:
+            print(user.discord_name)
+    else:
+        print("No saved followed users")
     client.loop.create_task(update_check_periodically())
 
 
@@ -58,6 +69,10 @@ def follow_user(user, letterboxd_username, disc_channel):
 
     new_user = User(user, url, latest_id, disc_channel)
     followed_users.append(new_user)
+
+    with open('followed.pkl', 'wb') as f:
+        pickle.dump(followed_users, f)
+
     return True
 
 def get_latest_entry(url):
@@ -77,7 +92,7 @@ def build_embed(entry, username):
 
 def already_following_user(new_user):
     for user in followed_users:
-        if user.discord.id == new_user.id:
+        if user.discord_id == new_user.id:
             return True
     return False
 
@@ -87,12 +102,13 @@ async def run_update_check():
         try:
             latest_id = get_latest_entry(user.rss_url).id
         except:
-            print("Couldn't update username {}".format(user.discord.name))
+            print("Couldn't update username {}".format(user.discord_name))
         
         if latest_id != user.latest_id:
             latest = get_latest_entry(user.rss_url)
             user.latest_id = latest.id
-            await user.channel.send(embed=build_embed(latest, user.discord.name))
+            user_channel = client.get_channel(user.channel_id)
+            await user_channel.send(embed=build_embed(latest, user.discord_name))
     
 async def update_check_periodically():
     while True:
