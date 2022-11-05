@@ -9,7 +9,6 @@ from discord.ext import tasks
 from secret import token
 from user import User
 
-feed_url = 'https://letterboxd.com/superronjon/rss/'
 
 followed_users = []
 
@@ -120,7 +119,6 @@ def get_latest_film(user):
             return embed
     
     return None
-
 
 def get_latest_entry(url):
     feed = feedparser.parse(url)
