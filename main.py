@@ -39,8 +39,13 @@ async def on_message(message):
         return
     
     if message.content.startswith('$latest_film'):
-        latest = get_latest_entry(feed_url)
-        await message.channel.send(embed=build_embed(latest, "SuperRonJon"))
+        args = message.content.split(' ')
+        if len(args) == 2 and len(message.mentions) == 1:
+            emb = get_latest_film(message.mentions[0])
+            if emb is not None:
+                await message.channel.send(embed=emb)
+            else:
+                await message.channel.send("Unable to find latest film for {}".message.mentions[0].name)
     
     if message.content.startswith('$follow'):
         args = message.content.split(' ')
@@ -51,7 +56,19 @@ async def on_message(message):
             else:
                 await message.channel.send("Already following user {}".format(message.mentions[0].name))
         else:
-            await message.channel.send("Inavlid command")
+            await message.channel.send("Invalid command")
+    
+    if message.content.startswith('$unfollow'):
+        args = message.content.split(' ')
+        if len(args) == 2 and len(message.mentions) == 1:
+            if unfollow_user(message.mentions[0]):
+                print("Unfollowed {}".format(message.mentions[0]))
+                await message.channel.send("Unfollowed {}".format(message.mentions[0]))
+            else:
+                print("Unable to unfollow {}".format(message.mentions[0]))
+                await message.channel.send("Unable to unfollow {}".format(message.mentions[0]))
+        else:
+            await message.channel.send("Invalid command")
     
     if message.content.startswith('$update'):
         await run_update_check()
@@ -68,12 +85,42 @@ def follow_user(user, letterboxd_username, disc_channel):
         print("couldn't find latest for {}".format(letterboxd_username))
 
     new_user = User(user, url, latest_id, disc_channel)
+    print('Followed {}'.format(user.name))
     followed_users.append(new_user)
 
+    dump_users()
+
+    return True
+
+def unfollow_user(user):
+    if not already_following_user(user):
+        print("Unable to unfollow {}".format(user.name))
+        return False
+    
+    for u in followed_users:
+        if u.discord_id == user.id:
+            followed_users.remove(u)
+            dump_users()
+            return True
+    
+    return False
+
+def dump_users():
     with open('followed.pkl', 'wb') as f:
         pickle.dump(followed_users, f)
 
-    return True
+def get_latest_film(user):
+    if not already_following_user(user):
+        return None
+    
+    for u in followed_users:
+        if u.discord_id == user.id:
+            latest = get_latest_entry(u.rss_url)
+            embed = build_embed(latest, u.discord_name)
+            return embed
+    
+    return None
+
 
 def get_latest_entry(url):
     feed = feedparser.parse(url)
@@ -105,8 +152,10 @@ async def run_update_check():
             print("Couldn't update username {}".format(user.discord_name))
         
         if latest_id != user.latest_id:
+            print("Update for {}".format(user.discord_name))
             latest = get_latest_entry(user.rss_url)
             user.latest_id = latest.id
+            dump_users()
             user_channel = client.get_channel(user.channel_id)
             await user_channel.send(embed=build_embed(latest, user.discord_name))
     
