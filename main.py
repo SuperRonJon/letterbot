@@ -144,6 +144,10 @@ def build_embed(entry, username):
     embeded.set_thumbnail(url=thumbnail.group(1))
     return embeded
 
+def error_embed(entry, username):
+    embeded = discord.Embed(title=entry.title, description=username, color=0xff0000, type='rich', url=entry.link)
+    return embeded
+
 def already_following_user(new_user):
     for user in followed_users:
         if user.discord_id == new_user.id:
@@ -164,7 +168,12 @@ async def run_update_check():
             user.latest_id = latest.id
             dump_users()
             user_channel = client.get_channel(user.channel_id)
-            await user_channel.send(embed=build_embed(latest, user.discord_name))
+            try:
+                to_send = build_embed(latest, user.discord_name)
+            except:
+                print("Error with update for {}".format(user.discord_name))
+                to_send = error_embed(latest, user.discord_name)
+            await user_channel.send(embed=to_send)
     
 async def update_check_periodically():
     while True:
