@@ -44,7 +44,16 @@ async def on_message(message):
             if emb is not None:
                 await message.channel.send(embed=emb)
             else:
-                await message.channel.send("Unable to find latest film for {}".message.mentions[0].name)
+                await message.channel.send("Unable to find latest film for {}".format(message.mentions[0].name))
+        elif len(args) == 1 and already_following_user(message.author):
+            emb = get_latest_film(message.author)
+            if emb is not None:
+                await message.channel.send(embed=emb)
+            else:
+                await message.channel.send("Unable to find latest film for {}".format(message.mentions[0].name))
+        else:
+            await message.channel.send("Invalid command")
+            
     
     if message.content.startswith('$follow'):
         args = message.content.split(' ')
