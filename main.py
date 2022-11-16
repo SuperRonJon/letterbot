@@ -80,6 +80,18 @@ async def on_message(message):
     
     if message.content.startswith('$update'):
         await run_update_check()
+    
+    if message.content.startswith('$delete'):
+        try:
+            async for msg in message.channel.history(limit=100):
+                if msg.author == client.user:
+                    print("Deleting message: {}".format(msg.content))
+                    await msg.delete()
+                    return
+        except Exception as e:
+            print("Error deleting message")
+            print(e)
+        
 
 
 def follow_user(user, letterboxd_username, disc_channel):
@@ -161,8 +173,9 @@ async def run_update_check():
             latest_id = get_latest_entry(user.rss_url).id
         except:
             print("Couldn't update username {}".format(user.discord_name))
+            continue
         
-        if latest_id != user.latest_id:
+        if latest_id != user.latest_id and latest_id != 0:
             print("Update for {}".format(user.discord_name))
             latest = get_latest_entry(user.rss_url)
             user.latest_id = latest.id
