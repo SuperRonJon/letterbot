@@ -4,13 +4,15 @@ import feedparser
 import os
 import pickle
 import re
-import threading
+import random
+import json
 from discord.ext import tasks
 from secret import token
 from user import User
 
 
 followed_users = []
+emojis = ["1️⃣", "2️⃣", "3️⃣", "4️⃣"]
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -91,6 +93,14 @@ async def on_message(message):
         except Exception as e:
             print("Error deleting message")
             print(e)
+    
+    if message.content.startswith("$rand"):
+        randoms = get_random_movies(4)
+        if randoms is not None:
+            emb = build_movies_embed(randoms)
+            sent = await message.channel.send(embed=emb)
+            for emoji in emojis:
+                await sent.add_reaction(emoji)
         
 
 
@@ -150,10 +160,39 @@ def get_entry_string(entry, username):
     description = desc.group(1)
     return "{} - {}".format(username, description)
 
+def get_all_movies():
+    f = open('movies.json')
+    return json.load(f)
+
+def get_random_movies(num):
+    result = []
+    movies = get_all_movies()
+    if len(movies) < num:
+        return None
+    for i in range(num):
+        random_movie = random.choice(movies)
+        print(random_movie)
+        movies.pop(movies.index(random_movie))
+        result.append(random_movie)
+    return result
+
 def build_embed(entry, username):
     embeded = discord.Embed(title=entry.title, description=get_entry_string(entry, username), color=0x00ff00, type='rich', url=entry.link)
     thumbnail = re.search(r'\"(.*?)\"', entry.summary)
     embeded.set_thumbnail(url=thumbnail.group(1))
+    return embeded
+
+def build_movies_embed(movies):
+    fields_array = []
+    for i, movie in enumerate(movies):
+        new_dict = {}
+        new_dict["name"] = "{}. {} ({})".format(i+1, movie["Title"], movie["Year"])
+        new_dict["value"] = movie["IMDB Link"]
+        fields_array.append(new_dict)
+    
+    embeded = discord.Embed(title="Movie Choices!", description="React with the number for the movie you'd like to watch", color=0x00ffff, type='rich')
+    for field in fields_array:
+        embeded.add_field(name=field["name"], value=field["value"], inline=False)
     return embeded
 
 def error_embed(entry, username):
