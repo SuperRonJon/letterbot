@@ -208,11 +208,8 @@ def already_following_user(new_user):
 async def run_update_check():
     for user in followed_users:
         latest_id = 0
-        try:
-            latest_id = get_latest_entry(user.rss_url).id
-        except:
-            print("Couldn't update username {}".format(user.discord_name))
-            continue
+        latest_id = get_latest_entry(user.rss_url).id
+        
         
         if latest_id != user.latest_id and latest_id != 0:
             print("Update for {}".format(user.discord_name))
@@ -229,7 +226,11 @@ async def run_update_check():
     
 async def update_check_periodically():
     while True:
-        await run_update_check()
+        try:
+            await run_update_check()
+        except:
+            print("Error updating...")
+            
         await asyncio.sleep(5)
 
 
