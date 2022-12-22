@@ -1,5 +1,3 @@
 secret.py
 venv/
-followed.pkl
 __pycache__/
-movies.json
