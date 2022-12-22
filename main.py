@@ -7,9 +7,13 @@ import re
 import random
 import json
 from discord.ext import tasks
-from secret import token
 from user import User
 
+try:
+    secret_token = os.environ['TOKEN']
+except KeyError:
+    from secret import token
+    secret_token = token
 
 followed_users = []
 emojis = ["1️⃣", "2️⃣", "3️⃣", "4️⃣"]
@@ -234,4 +238,4 @@ async def update_check_periodically():
         await asyncio.sleep(5)
 
 
-client.run(token)
+client.run(secret_token)
