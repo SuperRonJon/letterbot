@@ -67,6 +67,9 @@ async def on_message(message):
             if follow_user(message.mentions[0], args[2], message.channel):
                 print("Followed {} with letterboxd username {}".format(message.mentions[0].name, args[2]))
                 await message.channel.send("Followed {} with letterboxd username {}".format(message.mentions[0].name, args[2]))
+                emb = get_latest_film(message.mentions[0])
+                if emb is not None:
+                    await message.channel.send(embed=emb)
             else:
                 await message.channel.send("Already following user {}".format(message.mentions[0].name))
         else:
