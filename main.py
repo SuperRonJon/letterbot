@@ -30,11 +30,11 @@ async def on_ready():
     if os.path.exists('./followed.pkl'):
         with open('followed.pkl', 'rb') as f:
             followed_users = pickle.load(f)
-        print('Found saved followed users: ')
+        print('Found saved followed users: ', flush=True)
         for user in followed_users:
-            print(user.discord_name)
+            print(user.discord_name, flush=True)
     else:
-        print("No saved followed users")
+        print("No saved followed users", flush=True)
     client.loop.create_task(update_check_periodically())
 
 
@@ -65,7 +65,7 @@ async def on_message(message):
         args = message.content.split(' ')
         if len(args) == 3 and len(message.mentions) == 1:
             if follow_user(message.mentions[0], args[2], message.channel):
-                print("Followed {} with letterboxd username {}".format(message.mentions[0].name, args[2]))
+                print("Followed {} with letterboxd username {}".format(message.mentions[0].name, args[2]), flush=True)
                 await message.channel.send("Followed {} with letterboxd username {}".format(message.mentions[0].name, args[2]))
                 emb = get_latest_film(message.mentions[0])
                 if emb is not None:
@@ -122,7 +122,7 @@ def follow_user(user, letterboxd_username, disc_channel):
         print("couldn't find latest for {}".format(letterboxd_username))
 
     new_user = User(user, url, latest_id, disc_channel)
-    print('Followed {}'.format(user.name))
+    print('Followed {}'.format(user.name), flush=True)
     followed_users.append(new_user)
 
     dump_users()
@@ -178,7 +178,7 @@ def get_random_movies(num):
         return None
     for i in range(num):
         random_movie = random.choice(movies)
-        print(random_movie)
+        print(random_movie, flush=True)
         movies.pop(movies.index(random_movie))
         result.append(random_movie)
     return result
@@ -219,7 +219,7 @@ async def run_update_check():
         
         
         if latest_id != user.latest_id and latest_id != 0:
-            print("Update for {}".format(user.discord_name))
+            print("Update for {}".format(user.discord_name), flush=True)
             latest = get_latest_entry(user.rss_url)
             user.latest_id = latest.id
             dump_users()
@@ -227,7 +227,7 @@ async def run_update_check():
             try:
                 to_send = build_embed(latest, user.discord_name)
             except:
-                print("Error with update for {}".format(user.discord_name))
+                print("Error with update for {}".format(user.discord_name), flush=True)
                 to_send = error_embed(latest, user.discord_name)
             await user_channel.send(embed=to_send)
     
@@ -236,7 +236,7 @@ async def update_check_periodically():
         try:
             await run_update_check()
         except:
-            print("Error updating...")
+            print("Error updating...", flush=True)
             
         await asyncio.sleep(5)
 
