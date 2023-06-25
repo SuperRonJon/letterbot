@@ -1,5 +1,9 @@
 import re
 import pickle
+
+import sys, os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+
 from letterbot.user import User
 from letterbot.user_management import add_user_to_channel
 
