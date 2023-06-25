@@ -14,6 +14,7 @@ def already_following_user(user_id):
     cur.close()
     return len(results) > 0
 
+
 """
 Checks if the user is already associated with the given discord channel
 
@@ -31,6 +32,7 @@ def user_in_channel(user_id, channel_id):
             return True
     
     return False
+
 
 """
 Creates a new User class object and saves that user 
@@ -59,6 +61,20 @@ def follow_user(user, letterboxd_username, disc_channel):
             print("Already following user {}".format(user.name), flush=True)
             return False
 
+
+"""
+Unfollows a user from a given discord channel. 
+-If no channel parameter is given the user is completely removed 
+from the user table and all channel entries for that user are also removed. 
+
+- If a channel parameter is given the user is removed from that channel only.
+If that is the last channel the user is a part of and they have no remaining channels
+after deletion, that user is removed from the user tabel and unfollowed completely.
+
+@param user: discord.py user class of the user to unfollow
+@param disc_channel: discord.py channel of the channel to unfollow the user in
+                     if no channel given they are removed entirely
+"""
 def unfollow_user(user, disc_channel=None):
     if not already_following_user(user.id):
         return False
@@ -126,7 +142,12 @@ def remove_user_from_channel(user_id, channel_id):
     cur.close()
     
 
+"""
+Returns a User class for a specified discord_id from the user table
+if the user for the id is not found returns None
 
+@param discord_id: discord_id of the user to retrieve
+"""
 def get_user_by_discord_id(discord_id):
     conn = Connection()
     cur = conn.get_cursor()
@@ -139,9 +160,18 @@ def get_user_by_discord_id(discord_id):
         return None
     
 
+"""
+Returns a user class created from a given database row
+
+@param row_data: the results from a cursor fetch of a SELECT * FROM user query
+"""
 def get_user_from_row(row_data):
     return User(row_data[0], row_data[1], row_data[2], row_data[3])
 
+
+"""
+Returns a cursor over all users in database
+"""
 def get_users_cursor():
     conn = Connection()
     cur = conn.get_cursor()
