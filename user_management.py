@@ -56,6 +56,19 @@ def follow_user(user, letterboxd_username, disc_channel):
         else:
             return False
 
+def unfollow_user(user, disc_channel=None):
+    if not already_following_user(user.id):
+        return False
+    if disc_channel is not None:
+        print("removing user {} from channel...".format(user.name), flush=True)
+        remove_user_from_channel(user.id, disc_channel.id)
+        return True
+    else:
+        print("completely deleted user {}".format(user.name), flush=True)
+        delete_user(user.id)
+        return True
+
+
 """
 Adds a new broadcast channel for a user
 
@@ -71,6 +84,46 @@ def add_user_to_channel(user_id, channel_id):
     cur.close()
 
 
+"""
+Removes a user completely from the database
+Deletes all entries in channel table and user table
+
+@param user_id: discord id of the user to delete
+"""
+def delete_user(user_id):
+    conn = Connection()
+    cur = conn.get_cursor()
+    cur.execute("DELETE FROM channel WHERE discord_id=?", (user_id,))
+    cur.execute("DELETE FROM user WHERE discord_id=?", (user_id,))
+    conn.commit()
+
+
+"""
+Removes a user from a broadcast channel
+deletes the appropraite frow from the channel table
+if the user is no longer a part of any channels, they will be
+removed from the user table as well.
+
+@param user_id: discord id of the user to remove
+@param channel_id: channel to remove them from
+"""
+def remove_user_from_channel(user_id, channel_id):
+    conn = Connection()
+    cur = conn.get_cursor()
+    cur.execute("DELETE FROM channel WHERE discord_id=? AND channel_id=?", (user_id, channel_id))
+    conn.commit()
+    cur.execute("SELECT * FROM channel WHERE discord_id=?", (user_id,))
+    results = cur.fetchall()
+    if len(results) == 0:
+        print("User was removed from final channel, deleting user", flush=True)
+        cur.execute("DELETE FROM user WHERE discord_id=?", (user_id,))
+        conn.commit()
+    else:
+        print("User is still in at least one channel, keeping in database", flush=True)
+    cur.close()
+    
+
+
 def get_user_by_discord_id(discord_id):
     conn = Connection()
     cur = conn.get_cursor()
@@ -78,9 +131,17 @@ def get_user_by_discord_id(discord_id):
     results = cur.fetchone()
     cur.close()
     if results is not None:
-        return User(results[0], results[1], results[2], results[3])
+        return get_user_from_row(results)
     else:
         return None
     
 
+def get_user_from_row(row_data):
+    return User(row_data[0], row_data[1], row_data[2], row_data[3])
+
+def get_users_cursor():
+    conn = Connection()
+    cur = conn.get_cursor()
+    cur.execute("SELECT * FROM user")
+    return cur
 

@@ -33,4 +33,17 @@ def get_latest_film(discord_id):
     
     latest_entry = user.get_latest_entry()
     return build_embed(latest_entry, user.discord_name)
+
+def build_movies_embed(movies):
+    fields_array = []
+    for i, movie in enumerate(movies):
+        new_dict = {}
+        new_dict["name"] = "{}. {} ({})".format(i+1, movie["Title"], movie["Year"])
+        new_dict["value"] = movie["IMDB Link"]
+        fields_array.append(new_dict)
+    
+    embeded = discord.Embed(title="Movie Choices!", description="React with the number for the movie you'd like to watch", color=0x00ffff, type='rich')
+    for field in fields_array:
+        embeded.add_field(name=field["name"], value=field["value"], inline=False)
+    return embeded
     
