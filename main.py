@@ -3,10 +3,8 @@ import discord
 import os
 import random
 import json
-import embeds
-from discord.ext import tasks
-from user import User
-from user_management import follow_user, unfollow_user, already_following_user, get_user_from_row, get_users_cursor
+import letterbot.embeds as embeds
+from letterbot.user_management import follow_user, unfollow_user, already_following_user, get_user_from_row, get_users_cursor
 
 try:
     secret_token = os.environ['TOKEN']

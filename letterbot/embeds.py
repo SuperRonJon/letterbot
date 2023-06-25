@@ -1,6 +1,6 @@
 import discord
 import re
-from user_management import already_following_user, get_user_by_discord_id
+from letterbot.user_management import already_following_user, get_user_by_discord_id
 
 
 def get_entry_string(entry, username):

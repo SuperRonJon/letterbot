@@ -1,4 +1,4 @@
-from connection import Connection
+from letterbot.connection import Connection
 import feedparser
 
 class User:

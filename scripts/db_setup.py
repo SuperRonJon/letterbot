@@ -1,4 +1,7 @@
-from connection import Connection
+import sys, os
+
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+from letterbot.connection import Connection
 
 con = Connection()
 cur = con.get_cursor()

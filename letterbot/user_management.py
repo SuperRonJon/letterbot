@@ -1,5 +1,5 @@
-from connection import Connection
-from user import User
+from letterbot.connection import Connection
+from letterbot.user import User
 
 """
 Checks if the discord user is already in the user database
