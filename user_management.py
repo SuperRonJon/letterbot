@@ -46,14 +46,17 @@ def follow_user(user, letterboxd_username, disc_channel):
         new_user = User(user.id, user.name, letterboxd_username)
         new_user.save()
         add_user_to_channel(new_user.discord_id, disc_channel.id)
+        print("Followed new user {} with letterboxd username {}".format(new_user.discord_name, letterboxd_username), flush=True)
 
         return True
     else:
         #if user is followed - check if they are associated with the same channel
         if not user_in_channel(user.id, disc_channel.id):
             add_user_to_channel(user.id, disc_channel.id)
+            print("Followed existing user {} in new channel".format(user.name), flush=True)
             return True
         else:
+            print("Already following user {}".format(user.name), flush=True)
             return False
 
 def unfollow_user(user, disc_channel=None):

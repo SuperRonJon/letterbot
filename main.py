@@ -14,7 +14,6 @@ except KeyError:
     from secret import token
     secret_token = token
 
-followed_users = []
 emojis = ["1️⃣", "2️⃣", "3️⃣", "4️⃣"]
 
 intents = discord.Intents.default()
@@ -54,7 +53,6 @@ async def on_message(message):
         args = message.content.split(' ')
         if len(args) == 3 and len(message.mentions) == 1:
             if follow_user(message.mentions[0], args[2], message.channel):
-                print("Followed {} with letterboxd username {}".format(message.mentions[0].name, args[2]), flush=True)
                 await message.channel.send("Followed {} with letterboxd username {}".format(message.mentions[0].name, args[2]))
                 emb = embeds.get_latest_film(message.mentions[0].id)
                 if emb is not None:
