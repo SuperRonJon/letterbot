@@ -75,16 +75,25 @@ after deletion, that user is removed from the user tabel and unfollowed complete
 @param disc_channel: discord.py channel of the channel to unfollow the user in
                      if no channel given they are removed entirely
 """
-def unfollow_user(user, disc_channel=None):
-    if not already_following_user(user.id):
+def unfollow_user(disc_user, disc_channel=None):
+    if not already_following_user(disc_user.id):
+        print("Unable to unfollow user {} because they are not followed at all".format(disc_user.name), flush=True)
         return False
     if disc_channel is not None:
-        print("removing user {} from channel...".format(user.name), flush=True)
-        remove_user_from_channel(user.id, disc_channel.id)
-        return True
+        user = get_user_by_discord_id(disc_user.id)
+        if user.remove_from_channel(disc_channel.id):
+            print("removed user {} from channel".format(user.discord_name), flush=True)
+            user_channels = user.get_channel_ids()
+            if len(user_channels) == 0:
+                print("User {} was removed from final channel, deleting user".format(user.discord_name), flush=True)
+                delete_user(user.discord_id)
+            return True
+        else:
+            print("Unable to remove user {} from channel. They may not be in it..?".format(user.discord_name), flush=True)
+            return False
     else:
-        print("completely deleted user {}".format(user.name), flush=True)
-        delete_user(user.id)
+        print("completely deleting user {}".format(disc_user.name), flush=True)
+        delete_user(disc_user.id)
         return True
 
 
@@ -115,31 +124,6 @@ def delete_user(user_id):
     cur.execute("DELETE FROM channel WHERE discord_id=?", (user_id,))
     cur.execute("DELETE FROM user WHERE discord_id=?", (user_id,))
     conn.commit()
-
-
-"""
-Removes a user from a broadcast channel
-deletes the appropraite frow from the channel table
-if the user is no longer a part of any channels, they will be
-removed from the user table as well.
-
-@param user_id: discord id of the user to remove
-@param channel_id: channel to remove them from
-"""
-def remove_user_from_channel(user_id, channel_id):
-    conn = Connection()
-    cur = conn.get_cursor()
-    cur.execute("DELETE FROM channel WHERE discord_id=? AND channel_id=?", (user_id, channel_id))
-    conn.commit()
-    cur.execute("SELECT * FROM channel WHERE discord_id=?", (user_id,))
-    results = cur.fetchall()
-    if len(results) == 0:
-        print("User was removed from final channel, deleting user", flush=True)
-        cur.execute("DELETE FROM user WHERE discord_id=?", (user_id,))
-        conn.commit()
-    else:
-        print("User is still in at least one channel, keeping in database", flush=True)
-    cur.close()
     
 
 """

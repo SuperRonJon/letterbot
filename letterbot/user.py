@@ -50,3 +50,14 @@ class User:
         for result in results:
             response.append(result[0])
         return response
+    
+    def remove_from_channel(self, channel_id):
+        current_ids = self.get_channel_ids()
+        if channel_id in current_ids:
+            conn = Connection()
+            cur = conn.get_cursor()
+            cur.execute("DELETE FROM channel WHERE discord_id=? AND channel_id=?", (self.discord_id, channel_id))
+            conn.commit()
+            return True
+        else:
+            return False
