@@ -32,12 +32,18 @@ async def on_message(message):
     if message.content.startswith('$latest_film'):
         args = message.content.split(' ')
         if len(args) == 2 and len(message.mentions) == 1:
+            if not already_following_user(message.mentions[0].id):
+                await message.channel.send("Not following user {}".format(message.mentions[0].name))
+                return
             emb = embeds.get_latest_film(message.mentions[0].id)
             if emb is not None:
                 await message.channel.send(embed=emb)
             else:
                 await message.channel.send("Unable to find latest film for {}".format(message.mentions[0].name))
-        elif len(args) == 1 and already_following_user(message.author.id):
+        elif len(args) == 1:
+            if not already_following_user(message.author.id):
+                await message.channel.send("Not following user {}".format(message.author.name))
+                return
             emb = embeds.get_latest_film(message.author.id)
             if emb is not None:
                 await message.channel.send(embed=emb)
@@ -66,8 +72,7 @@ async def on_message(message):
             if unfollow_user(message.mentions[0], message.channel):
                 await message.channel.send("Unfollowed {}".format(message.mentions[0]))
             else:
-                print("Unable to unfollow {}".format(message.mentions[0]))
-                await message.channel.send("Unable to unfollow {}".format(message.mentions[0]))
+                await message.channel.send("Unable to unfollow {}. They may not be followed in this channel or at all.".format(message.mentions[0]))
         else:
             await message.channel.send("Invalid command")
     
