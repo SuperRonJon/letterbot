@@ -4,7 +4,7 @@ import os
 import random
 import json
 import letterbot.embeds as embeds
-from letterbot.user_management import follow_user, unfollow_user, already_following_user, get_user_from_row, get_users_cursor
+from letterbot.user_management import follow_user, unfollow_user, already_following_user, get_user_from_row, get_users_cursor, get_all_users_in_channel
 
 try:
     secret_token = os.environ['TOKEN']
@@ -97,11 +97,25 @@ async def on_message(message):
             sent = await message.channel.send(embed=emb)
             for emoji in emojis:
                 await sent.add_reaction(emoji)
+    
+    if message.content.startswith("$users_here"):
+        users_string = get_users_string(message.channel.id)
+        await message.channel.send(users_string)
         
 
 def get_all_movies():
     f = open('movies.json')
     return json.load(f)
+
+def get_users_string(channel_id):
+    users = get_all_users_in_channel(channel_id)
+    result = ""
+    if len(users) == 0:
+        result = "No users followed in this channel."
+    else:
+        for user in users:
+            result += user.discord_name + "\n"
+    return result
 
 def get_random_movies(num):
     result = []

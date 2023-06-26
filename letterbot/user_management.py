@@ -162,3 +162,16 @@ def get_users_cursor():
     cur.execute("SELECT * FROM user")
     return cur
 
+
+def get_all_users_in_channel(channel_id):
+    conn = Connection()
+    cur = conn.get_cursor()
+    discord_ids = []
+    users = []
+    cur.execute("SELECT discord_id FROM channel WHERE channel_id=?", (channel_id,))
+    for row in cur:
+        if row[0] not in discord_ids:
+            discord_ids.append(row[0])
+    for id in discord_ids:
+        users.append(get_user_by_discord_id(id)) 
+    return users
