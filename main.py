@@ -17,6 +17,7 @@ emojis = ["1️⃣", "2️⃣", "3️⃣", "4️⃣"]
 intents = discord.Intents.default()
 intents.message_content = True
 client = discord.Client(intents=intents)
+SLEEP_SECONDS = 30
 
 
 @client.event
@@ -155,7 +156,7 @@ async def update_check_periodically():
         except:
             print("Error updating...", flush=True)
             
-        await asyncio.sleep(5)
+        await asyncio.sleep(SLEEP_SECONDS)
 
 
 client.run(secret_token)
