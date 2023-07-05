@@ -4,6 +4,7 @@ import os
 import random
 import json
 import letterbot.embeds as embeds
+import letterbot.tmdb as tmdb
 from letterbot.user_management import follow_user, unfollow_user, already_following_user, get_user_from_row, get_users_cursor, get_all_users_in_channel
 
 try:
@@ -102,6 +103,19 @@ async def on_message(message):
     if message.content.startswith("$users_here"):
         users_string = get_users_string(message.channel.id)
         await message.channel.send(users_string)
+    
+    if message.content.startswith("$info"):
+        args = message.content.split(' ')
+        if len(args) == 1:
+            await message.channel.send("invalid query")
+        else:
+            query = ""
+            for arg in args:
+                if arg != "$info":
+                    query += arg + " "
+            info = tmdb.get_info_for_search(query)
+            emb = embeds.build_info_embed(info)
+            await message.channel.send(embed=emb)
         
 
 def get_all_movies():
