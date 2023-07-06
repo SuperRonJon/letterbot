@@ -5,6 +5,7 @@ from secret import tmdb_key
 tmdb.API_KEY = tmdb_key
 
 def get_info_for_search(query):
+    # Search for movie based on query
     search = tmdb.Search()
     response = search.movie(query=query)
     if len(search.results) == 0:
@@ -14,32 +15,51 @@ def get_info_for_search(query):
         movie = tmdb.Movies(first_id)
     except:
         return None
+    
+    # If movie is found get details
     response = movie.info()
     date = parse(movie.release_date)
     date_string = date.strftime('%B %d %Y')
-    genres_string = ""
-    for genre in movie.genres:
-        if genres_string:
-            genres_string += " - "
-        genres_string += genre['name']
+
+    # Parse genres
+    genres_string = stringify_objects(movie.genres, "name", " - ")
+
+    # Get streaming providers
     response = movie.watch_providers()
-    provider_string = ""
     try:
-        providers = movie.results["US"]["flatrate"]
-        for provider in providers:
-            if provider_string:
-                provider_string += " - "
-            provider_string += provider["provider_name"]
-    except KeyError:
-        print("no streaming providers")
+        provider_string = stringify_objects(movie.results["US"]["flatrate"], "provider_name", " - ")
+    except:
         provider_string = "None"
+    
+    # Get director
+    response = movie.credits()
+    directors = filter(is_director, movie.crew)
+    director_string = stringify_objects(directors, "name", ", ")
+
+    # Get top cast
+    top_cast = movie.cast[:3]
+    cast_string = stringify_objects(top_cast, "name", ", ")
+
     result = {
         "title": movie.title,
         "description": movie.overview,
+        "director": director_string,
+        "cast": cast_string,
         "imdb_link": "https://www.imdb.com/title/" + movie.imdb_id,
         "release_date": date_string,
         "genres": genres_string,
         "poster_link": "http://image.tmdb.org/t/p/original/" + movie.poster_path,
         "providers": provider_string
     }
+    return result
+
+def is_director(p):
+    return p["job"] == "Director"
+
+def stringify_objects(objects, key, delimiter):
+    result = ""
+    for object in objects:
+        if result:
+            result += delimiter
+        result += object[key]
     return result
