@@ -104,14 +104,14 @@ async def on_message(message):
         users_string = get_users_string(message.channel.id)
         await message.channel.send(users_string)
     
-    if message.content.startswith("$info"):
+    if message.content.startswith("$film_info"):
         args = message.content.split(' ')
         if len(args) == 1:
             await message.channel.send("invalid query")
         else:
             query = ""
             for arg in args:
-                if arg != "$info":
+                if arg != "$film_info":
                     query += arg + " "
             info = tmdb.get_info_for_search(query)
             try:
