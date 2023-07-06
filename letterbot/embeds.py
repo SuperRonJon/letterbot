@@ -50,21 +50,34 @@ def build_movies_embed(movies):
 def build_info_embed(info):
     fields_array = [
         {
+            "name": "Director",
+            "value": info["director"],
+            "inline": True
+        },
+        {
+            "name": "Starring",
+            "value": info["cast"],
+            "inline": True
+        },
+        {
             "name": "Release Date",
-            "value": info["release_date"]
+            "value": info["release_date"],
+            "inline": False
         },
         {
             "name": "Genres",
-            "value": info["genres"]
+            "value": info["genres"],
+            "inline": True
         },
         {
             "name": "Streaming Providers",
-            "value": info["providers"]
+            "value": info["providers"],
+            "inline": True
         },
     ]
     embeded = discord.Embed(title=info["title"], description=info["description"], color=0x00ff00, type='rich', url=info["imdb_link"])
     embeded.set_image(url=info["poster_link"])
     for field in fields_array:
-        embeded.add_field(name=field["name"], value=field["value"], inline=False)
+        embeded.add_field(name=field["name"], value=field["value"], inline=field["inline"])
     return embeded
     
