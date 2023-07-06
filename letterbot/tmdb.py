@@ -27,8 +27,9 @@ def get_info_for_search(query):
     # Get streaming providers
     response = movie.watch_providers()
     try:
-        provider_string = stringify_objects(movie.results["US"]["flatrate"], "provider_name", " - ")
-    except:
+        no_channel_providers = list(filter(is_service, movie.results["US"]["flatrate"]))
+        provider_string = stringify_objects(no_channel_providers, "provider_name", " - ")
+    except Exception:
         provider_string = "None"
     
     # Get director
@@ -63,3 +64,6 @@ def stringify_objects(objects, key, delimiter):
             result += delimiter
         result += object[key]
     return result
+
+def is_service(provider):
+    return not provider["provider_name"].endswith("Channel")

@@ -114,8 +114,11 @@ async def on_message(message):
                 if arg != "$info":
                     query += arg + " "
             info = tmdb.get_info_for_search(query)
-            emb = embeds.build_info_embed(info)
-            await message.channel.send(embed=emb)
+            try:
+                emb = embeds.build_info_embed(info)
+                await message.channel.send(embed=emb)
+            except:
+                await message.channel.send("Error with search")
         
 
 def get_all_movies():
