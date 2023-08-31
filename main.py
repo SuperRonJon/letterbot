@@ -50,7 +50,7 @@ async def on_message(message):
             if emb is not None:
                 await message.channel.send(embed=emb)
             else:
-                await message.channel.send("Unable to find latest film for {}".format(message.mentions[0].name))
+                await message.channel.send("Unable to find latest film for {}".format(message.author.name))
         else:
             await message.channel.send("Invalid command")
             
