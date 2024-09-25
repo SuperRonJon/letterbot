@@ -29,6 +29,8 @@ def get_info_for_search(query):
     try:
         no_channel_providers = list(filter(is_service, movie.results["US"]["flatrate"]))
         provider_string = stringify_objects(no_channel_providers, "provider_name", " - ")
+        if not provider_string:
+            provider_string = "None"
     except Exception:
         provider_string = "None"
     
@@ -66,4 +68,5 @@ def stringify_objects(objects, key, delimiter):
     return result
 
 def is_service(provider):
-    return not provider["provider_name"].endswith("Channel")
+    allowed_providers = ["amazon prime video", "apple tv plus", "hulu", "paramount plus", "netflix", "max", "disney plus", "peacock premium"]
+    return provider["provider_name"].lower() in allowed_providers
