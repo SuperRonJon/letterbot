@@ -11,8 +11,11 @@ def get_info_for_search(query):
     if len(search.results) == 0:
         return None
     first_id = search.results[0]['id']
+    return get_info_from_id(first_id)
+
+def get_info_from_id(id):
     try:
-        movie = tmdb.Movies(first_id)
+        movie = tmdb.Movies(id)
     except:
         return None
     
@@ -20,6 +23,7 @@ def get_info_for_search(query):
     response = movie.info()
     date = parse(movie.release_date)
     date_string = date.strftime('%B %d %Y')
+    year_string = str(date.year)
 
     # Parse genres
     genres_string = stringify_objects(movie.genres, "name", " - ")
@@ -52,7 +56,8 @@ def get_info_for_search(query):
         "release_date": date_string,
         "genres": genres_string,
         "poster_link": "http://image.tmdb.org/t/p/original/" + movie.poster_path,
-        "providers": provider_string
+        "providers": provider_string,
+        "year": year_string
     }
     return result
 

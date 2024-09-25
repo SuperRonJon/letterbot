@@ -80,4 +80,27 @@ def build_info_embed(info):
     for field in fields_array:
         embeded.add_field(name=field["name"], value=field["value"], inline=field["inline"])
     return embeded
+
+def build_poll_embeds(info_list):
+    results = []
+    for x, info in enumerate(info_list):
+        header = f'{x+1}: {info["title"]} ({info["year"]})'
+        fields_array = [
+            {
+                "name": "Director",
+                "value": info["director"],
+                "inline": True
+            },
+            {
+                "name": "Starring",
+                "value": info["cast"],
+                "inline": True
+            }
+        ]
+        embeded = discord.Embed(title=header, description=info["description"], color=0x00ffff, type='rich', url=info["imdb_link"])
+        embeded.set_thumbnail(url=info["poster_link"])
+        for field in fields_array:
+            embeded.add_field(name=field["name"], value=field["value"], inline=field["inline"])
+        results.append(embeded)
+    return results
     
