@@ -119,6 +119,23 @@ async def on_message(message):
                 await message.channel.send(embed=emb)
             except:
                 await message.channel.send("Error with search")
+
+    if message.content.startswith("$create_poll"):
+        args = message.content.split(' ')
+        if len(args) == 1:
+            await message.channel.send("invalid query")
+        else:
+            ids = []
+            for arg in args:
+                if arg != "$create_poll":
+                    ids.append(arg)
+            results_info = []
+            for id in ids:
+                results_info.append(tmdb.get_info_from_id(id))
+            embs = embeds.build_poll_embeds(results_info)
+            sent = await message.channel.send(embeds=embs)
+            for x, id in enumerate(ids):
+                await sent.add_reaction(emojis[x])
         
 
 def get_all_movies():
