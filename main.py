@@ -13,7 +13,7 @@ except KeyError:
     from secret import token
     secret_token = token
 
-emojis = ["1️⃣", "2️⃣", "3️⃣", "4️⃣"]
+emojis = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣", "🔟"]
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -92,13 +92,23 @@ async def on_message(message):
             print("Error deleting message")
             print(e)
     
-    if message.content.startswith("$rand"):
-        randoms = get_random_movies(4)
-        if randoms is not None:
-            emb = embeds.build_movies_embed(randoms)
-            sent = await message.channel.send(embed=emb)
-            for emoji in emojis:
-                await sent.add_reaction(emoji)
+    if message.content.startswith("$random_poll"):
+        args = message.content.split(' ')
+        if len(args) <= 1:
+            await message.channel.send("Must specify number of options from 1-10 e.g `$random_poll 4`")
+        if len(args) > 2:
+            await message.channel.send("Too many paramenters, only need one value for number of options.")
+        else:
+            num_choices = int(args[1])
+            random_ids = get_random_movies(num_choices)
+            if random_ids is not None:
+                results_info = []
+                for id in random_ids:
+                    results_info.append(tmdb.get_info_from_id(id))
+                embs = embeds.build_poll_embeds(results_info)
+                sent = await message.channel.send(embeds=embs)
+                for x, id in enumerate(random_ids):
+                    await sent.add_reaction(emojis[x])
     
     if message.content.startswith("$users_here"):
         users_string = get_users_string(message.channel.id)
@@ -161,7 +171,7 @@ def get_random_movies(num):
         random_movie = random.choice(movies)
         print(random_movie, flush=True)
         movies.pop(movies.index(random_movie))
-        result.append(random_movie)
+        result.append(random_movie["TMDB ID"])
     return result
 
 async def run_update_check():
