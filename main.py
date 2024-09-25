@@ -100,15 +100,18 @@ async def on_message(message):
             await message.channel.send("Too many paramenters, only need one value for number of options.")
         else:
             num_choices = int(args[1])
-            random_ids = get_random_movies(num_choices)
-            if random_ids is not None:
-                results_info = []
-                for id in random_ids:
-                    results_info.append(tmdb.get_info_from_id(id))
-                embs = embeds.build_poll_embeds(results_info)
-                sent = await message.channel.send(embeds=embs)
-                for x, id in enumerate(random_ids):
-                    await sent.add_reaction(emojis[x])
+            if 1 <= num_choices and num_choices <= 10:
+                random_ids = get_random_movies(num_choices)
+                if random_ids is not None:
+                    results_info = []
+                    for id in random_ids:
+                        results_info.append(tmdb.get_info_from_id(id))
+                    embs = embeds.build_poll_embeds(results_info)
+                    sent = await message.channel.send(embeds=embs)
+                    for x, id in enumerate(random_ids):
+                        await sent.add_reaction(emojis[x])
+            else:
+                await message.channel.send("Number of options must be between 1-10")
     
     if message.content.startswith("$users_here"):
         users_string = get_users_string(message.channel.id)
