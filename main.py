@@ -103,7 +103,7 @@ async def on_message(message):
             try:
                 num_choices = int(args[1])
             except ValueError:
-                await message.channel.send("Invalid number of options. Must be an integer from 1-10.")
+                await message.channel.send("Invalid number of options.")
             if 1 <= num_choices and num_choices <= 10:
                 random_ids = get_random_movies(num_choices)
                 if random_ids is not None:
