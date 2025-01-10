@@ -48,6 +48,7 @@ def follow_user(user, letterboxd_username, disc_channel):
         new_user = User(user.id, user.name, letterboxd_username)
         new_user.save()
         add_user_to_channel(new_user.discord_id, disc_channel.id)
+        new_user.fill_watched_history()
         print("Followed new user {} with letterboxd username {}".format(new_user.discord_name, letterboxd_username), flush=True)
 
         return True

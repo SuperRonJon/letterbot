@@ -5,7 +5,8 @@ import random
 import json
 import letterbot.embeds as embeds
 import letterbot.tmdb as tmdb
-from letterbot.user_management import follow_user, unfollow_user, already_following_user, get_user_from_row, get_users_cursor, get_all_users_in_channel
+from letterbot.user_management import follow_user, unfollow_user, already_following_user, get_user_from_row, get_users_cursor, get_all_users_in_channel, get_user_by_discord_id
+from letterbot.watched.watch_entry import WatchEntry
 
 try:
     secret_token = os.environ['TOKEN']
@@ -153,6 +154,60 @@ async def on_message(message):
             sent = await message.channel.send(embeds=embs)
             for x, id in enumerate(ids):
                 await sent.add_reaction(emojis[x])
+    
+    if message.content.startswith("$top_watched"):
+        args = message.content.split(' ')
+        if len(args) == 1:
+            strings = get_watched_strings(*get_user_by_discord_id(message.author.id).get_top_watched())
+            await message.channel.send('\n'.join(strings))
+        elif len(args) == 2 and len(message.mentions) == 1:
+            strings = get_watched_strings(*get_user_by_discord_id(message.mentions[0].id).get_top_watched())
+            await message.channel.send('\n'.join(strings))
+        elif len(args) == 2:
+            try:
+                amount = int(args[1])
+            except Exception:
+                await message.channel.send('Error processing command.')
+                return
+            strings = get_watched_strings(*get_user_by_discord_id(message.author.id).get_top_watched(amount=amount))
+            await message.channel.send('\n'.join(strings))
+        elif len(args) == 3 and len(message.mentions) == 1:
+            try:
+                amount = int(args[2])
+            except Exception:
+                await message.channel.send('Error processing command.')
+                return
+            strings = get_watched_strings(*get_user_by_discord_id(message.mentions[0].id).get_top_watched(amount=amount))
+            await message.channel.send('\n'.join(strings))
+        else:
+            await message.channel.send("Invalid parameters")
+
+    if message.content.startswith("$recently_watched"):
+        args = message.content.split(' ')
+        if len(args) == 1:
+            strings = get_watched_strings(*get_user_by_discord_id(message.author.id).get_recently_watched())
+            await message.channel.send('\n'.join(strings))
+        elif len(args) == 2 and len(message.mentions) == 1:
+            strings = get_watched_strings(*get_user_by_discord_id(message.mentions[0].id).get_recently_watched())
+            await message.channel.send('\n'.join(strings))
+        elif len(args) == 2:
+            try:
+                amount = int(args[1])
+            except Exception:
+                await message.channel.send('Error processing command.')
+                return
+            strings = get_watched_strings(*get_user_by_discord_id(message.author.id).get_recently_watched(amount=amount))
+            await message.channel.send('\n'.join(strings))
+        elif len(args) == 3 and len(message.mentions) == 1:
+            try:
+                amount = int(args[2])
+            except Exception:
+                await message.channel.send('Error processing command.')
+                return
+            strings = get_watched_strings(*get_user_by_discord_id(message.mentions[0].id).get_recently_watched(amount=amount))
+            await message.channel.send('\n'.join(strings))
+        else:
+            await message.channel.send("Invalid parameters")
         
 
 def get_all_movies():
@@ -181,6 +236,17 @@ def get_random_movies(num):
         result.append(random_movie["TMDB ID"])
     return result
 
+def get_watched_strings(names, ratings):
+    result = []
+    for index, name in enumerate(names):
+        if ratings[index] == -1.0:
+            rating_string = "X"
+        else:
+            rating_string = str(ratings[index])
+        result.append("{} - {}/5.0".format(name, rating_string))
+    return result
+
+
 async def run_update_check():
     cur = get_users_cursor()
     for row in cur:
@@ -190,15 +256,19 @@ async def run_update_check():
         if actual_latest_id != cur_user.latest_id and actual_latest_id != 0:
             print("Update for {}".format(cur_user.discord_name), flush=True)
             cur_user.update_latest_id(actual_latest_id)
-            user_channel_ids = cur_user.get_channel_ids()
-            for channel_id in user_channel_ids:
-                channel = client.get_channel(channel_id)
-                try:
-                    to_send = embeds.build_embed(actual_latest_entry, cur_user.discord_name)
-                except:
-                    print("Error with update for {}".format(cur_user.letterboxd_user), flush=True)
-                    to_send = embeds.error_embed(actual_latest_entry, cur_user.discord_name)
-                await channel.send(embed=to_send)
+            new_entry = WatchEntry.from_feed(cur_user.discord_id, actual_latest_entry)
+            if not cur_user.already_had_entry(new_entry.watch_id):
+                new_entry.save()
+                user_channel_ids = cur_user.get_channel_ids()
+                for channel_id in user_channel_ids:
+                    channel = client.get_channel(channel_id)
+                    try:
+                        to_send = embeds.build_embed(actual_latest_entry, cur_user.discord_name)
+                    except:
+                        print("Error with update for {}".format(cur_user.letterboxd_user), flush=True)
+                        to_send = embeds.error_embed(actual_latest_entry, cur_user.discord_name)
+                    await channel.send(embed=to_send)
+            
 
 async def update_check_periodically():
     while True:

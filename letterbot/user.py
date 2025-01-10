@@ -1,4 +1,6 @@
 from letterbot.connection import Connection
+from letterbot.watched.watch_entry import WatchEntry
+
 import feedparser
 
 class User:
@@ -61,3 +63,60 @@ class User:
             return True
         else:
             return False
+    
+    def already_had_entry(self, watch_id):
+        conn = Connection()
+        cur = conn.get_cursor()
+        cur.execute("SELECT * FROM watched WHERE discord_id=? AND watch_id=?", (self.discord_id, watch_id))
+        results = cur.fetchall()
+        cur.close()
+        return len(results) > 0
+    
+    def fill_watched_history(self):
+        entries = feedparser.parse(self.rss_url).entries
+        for entry in entries:
+            try:
+                watch_entry = WatchEntry.from_feed(self.discord_id, entry)
+            except Exception:
+                print("Error with parsing entry for user {}".format(self.discord_name))
+                break
+            if not self.already_had_entry(watch_entry.watch_id):
+                watch_entry.save()
+            else:
+                print("Already had entry {}".format(watch_entry.film_title))
+    
+    def get_top_watched(self, amount=10):
+        conn = Connection()
+        cur = conn.get_cursor()
+        cur.execute("SELECT * FROM watched WHERE discord_id=? GROUP BY tmdb_id ORDER BY rating DESC", (self.discord_id,))
+        results = cur.fetchall()
+        cur.close()
+        movie_names = []
+        movie_ratings = []
+        i = 0
+        for row in results:
+            if i < amount:
+                movie_names.append(row[2])
+                movie_ratings.append(row[6])
+                i += 1
+            else:
+                break
+        return (movie_names, movie_ratings)
+    
+    def get_recently_watched(self, amount=10):
+        conn = Connection()
+        cur = conn.get_cursor()
+        cur.execute("SELECT * FROM watched WHERE discord_id=? ORDER BY watch_date DESC", (self.discord_id,))
+        results = cur.fetchall()
+        cur.close()
+        movie_names = []
+        movie_ratings = []
+        i = 0
+        for row in results:
+            if i < amount:
+                movie_names.append(row[2])
+                movie_ratings.append(row[6])
+                i += 1
+            else:
+                break
+        return (movie_names, movie_ratings)
