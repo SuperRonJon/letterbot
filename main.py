@@ -266,7 +266,7 @@ async def run_update_check():
         try:
             actual_latest_entry = cur_user.get_latest_entry()
         except:
-            print("Error pulling latest entry for {}".format(cur_user.discord_name), flush=True)
+            print("Error pulling latest entry for discord: {} letterboxd: {}".format(cur_user.discord_name, cur_user.letterboxd_user), flush=True)
         if actual_latest_entry is not None:
             actual_latest_id = actual_latest_entry.id
         if actual_latest_id != cur_user.latest_id and actual_latest_id != 0:
