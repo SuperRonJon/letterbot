@@ -96,6 +96,24 @@ def unfollow_user(disc_user, disc_channel=None):
         print("completely deleting user {}".format(disc_user.name), flush=True)
         delete_user(disc_user.id)
         return True
+    
+
+"""
+Unfollows a user completely by letterboxd username
+
+@param letterboxd_username: string of the letterboxd username to unfollow
+@return true if user was found and unfollowed, false if user was not able to be found
+"""
+def unfollow_user_by_letterboxd(letterboxd_username):
+    user = get_user_by_letterboxd_username(letterboxd_username)
+    if user is None:
+        print("Unable to unfollow letterboxd user {} because they are not found.", flush=True)
+    if not already_following_user(user.discord_id):
+        print("Unable to unfollow letterboxd user {} because they are not followed".format(user.letterboxd_user), flush=True)
+        return False
+    print("Deleting letterboxd user {}".format(user.letterboxd_user))
+    delete_user(user.discord_id)
+    return True
 
 
 """
@@ -137,6 +155,24 @@ def get_user_by_discord_id(discord_id):
     conn = Connection()
     cur = conn.get_cursor()
     cur.execute("SELECT * FROM user WHERE discord_id=?", (discord_id,))
+    results = cur.fetchone()
+    cur.close()
+    if results is not None:
+        return get_user_from_row(results)
+    else:
+        return None
+    
+
+"""
+Returns a User class for a specified letterboxd_username from the user table
+if the user for the letterboxd username is not found returns None
+
+@param letterboxd_username: letterboxd username of the user to retrieve
+"""
+def get_user_by_letterboxd_username(letterboxd_username):
+    conn = Connection()
+    cur = conn.get_cursor()
+    cur.execute("SELECT * FROM user WHERE letterboxd_user=?", (letterboxd_username,))
     results = cur.fetchone()
     cur.close()
     if results is not None:

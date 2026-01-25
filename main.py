@@ -5,7 +5,7 @@ import random
 import json
 import letterbot.embeds as embeds
 import letterbot.tmdb as tmdb
-from letterbot.user_management import follow_user, unfollow_user, already_following_user, get_user_from_row, get_users_cursor, get_all_users_in_channel, get_user_by_discord_id
+from letterbot.user_management import follow_user, unfollow_user, already_following_user, get_user_from_row, get_users_cursor, get_all_users_in_channel, get_user_by_discord_id, unfollow_user_by_letterboxd
 from letterbot.watched.watch_entry import WatchEntry
 
 try:
@@ -76,6 +76,16 @@ async def on_message(message):
                 await message.channel.send("Unfollowed {}".format(message.mentions[0]))
             else:
                 await message.channel.send("Unable to unfollow {}. They may not be followed in this channel or at all.".format(message.mentions[0]))
+        else:
+            await message.channel.send("Invalid command")
+    
+    if message.content.startswith('$letterboxd_unfollow'):
+        args = message.content.split(' ')
+        if len(args) == 2:
+            if(unfollow_user_by_letterboxd(args[1])):
+                await message.channel.send("Unfollowed letterboxd user {}.".format(args[1]))
+            else:
+                await message.channel.send("Failed to unfollow {}. They may not be followed".format(args[1]))
         else:
             await message.channel.send("Invalid command")
     
@@ -251,8 +261,14 @@ async def run_update_check():
     cur = get_users_cursor()
     for row in cur:
         cur_user = get_user_from_row(row)
-        actual_latest_entry = cur_user.get_latest_entry()
-        actual_latest_id = actual_latest_entry.id
+        actual_latest_entry = None
+        actual_latest_id = 0
+        try:
+            actual_latest_entry = cur_user.get_latest_entry()
+        except:
+            print("Error pulling latest entry for {}".format(cur_user.discord_name))
+        if actual_latest_entry is not None:
+            actual_latest_id = actual_latest_entry.id
         if actual_latest_id != cur_user.latest_id and actual_latest_id != 0:
             print("Update for {}".format(cur_user.discord_name), flush=True)
             cur_user.update_latest_id(actual_latest_id)
