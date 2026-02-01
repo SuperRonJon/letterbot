@@ -4,3 +4,4 @@ __pycache__/
 followed.pkl
 movies.json
 *.db
+*.sql

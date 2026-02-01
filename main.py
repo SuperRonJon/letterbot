@@ -231,7 +231,7 @@ def get_users_string(channel_id):
         result = "No users followed in this channel."
     else:
         for user in users:
-            result += user.discord_name + "\n"
+            result += "Discord: " + user.discord_name + " - Letterboxd: " + user.letterboxd_user + "\n"
     return result
 
 def get_random_movies(num):
